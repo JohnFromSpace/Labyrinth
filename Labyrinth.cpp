@@ -12,7 +12,6 @@
 *	<file with main function>
 *
 */
-#include <iostream>
 #include <time.h>
 #include <fstream>
 using namespace std;
