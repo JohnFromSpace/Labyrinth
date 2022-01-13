@@ -11,8 +11,7 @@ using namespace std;
 #define SIZE 1501 // 79 * 19 
 
 // CELL STRUCTURE
-struct Cell
-{
+struct Cell{
     bool visited;
     bool top_wall;
     bool bot_wall;
