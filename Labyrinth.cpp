@@ -1,17 +1,4 @@
-/**
-*
-*	Solution to course project # 10
-*	Introduction to programming course
-*	Faculty of Mathematics and Informatics of Sofia University
-*	Winter semester 2021/2022
-*
-*	@author Boril Ignatov
-*	@idnumber OMI0600124
-*	@compiler VC
-*
-*	<file with main function>
-*
-*/
+
 #include <time.h>
 #include <fstream>
 using namespace std;
