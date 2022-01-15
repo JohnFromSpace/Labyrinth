@@ -1,112 +1,114 @@
-
-#include <time.h>
+/*******************************************************************************
+ * Preprocessor Directives
+ ******************************************************************************/
+ 
+ /* System Includes */
+#include <stdio.h>
 #include <fstream>
-using namespace std;
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <stdbool.h>
+#include <io.h> // For VC with Windows
+//#include "unistd.h" //For linux
+#include "limits.h"//Linux
 
-#define GRID_WIDTH 79
-#define GRID_HEIGHT 18
-#define NORTH 0
-#define EAST 1
-#define SOUTH 2
-#define WEST 3
+/* Header Files */
+#include "linked_list.h"
+#include "maze.h"
+#include "stack.h"
 
-char grid[GRID_WIDTH * GRID_HEIGHT];
 
-void ResetGrid();
-int XYToIndex(int x, int y);
-int IsInBounds(int x, int y);
-void Visit(int x, int y);
-void PrintGrid();
+/*******************************************************************************
+ * Macros and Constants
+ ******************************************************************************/
+#define EOK (0)
+#define ANIMATION_DELAY_US (50000)
 
-int main(){
-	// Starting point and top-level control.
-	srand(time(0)); // seed random number generator
-	ResetGrid();
-	Visit(1, 1);
-	PrintGrid();
-	return 0;
+ //#define RENDER_GIF
+ //#define ANIMATED_ON_SCREEN
+
+static int outCount = 0;
+
+/*******************************************************************************
+ * Abstract Data Types
+ ******************************************************************************/
+typedef struct coords_t {
+    int x;
+    int y;
+} coords_t;
+
+typedef uint8_t direction_t;
+
+
+/*******************************************************************************
+ * Private Function Prototypes
+ ******************************************************************************/
+ /* Tells us if two cells are within the extremities of an array ie: [0, dimMax]
+  * so a future operation does trigger a segfault due to addressing invalid
+  * memory.
+  */
+bool inRange(int x, int y, int xMax, int yMax);
+
+/* Tells us if two cells are in range of each other (ie: 4-connected
+ * neighbours.
+ */
+bool isConnected4(int x1, int y1, int x2, int y2);
+
+/* Takes a pair of coordinates, and if they are 4-neighbours, converts the
+ * coordinates into a constants representing one of 4 cartesian unit vectors.
+ */
+direction_t direction(int x1, int y1, int x2, int y2);
+
+/* Provides the inverse of the the direction() function.
+ */
+direction_t reverseDirection(int dir);
+
+/* Tells us if it is possible to travel from one location to another, taking
+ * into account whether there is a wall between the two coordinates.
+ */
+bool isAccessible(int x1, int y1, status_t status1, int x2, int y2, status_t status2);
+
+
+/*******************************************************************************
+ * Function Definitions
+ ******************************************************************************/
+ /*----------------------------------------------------------------------------*/
+int main(void) {
+    maze_t maze = { 0 };
+
+    /* Initialize random seed */
+    srand(time(NULL));
+
+    setbuf(stdout, NULL);
+
+    /* Determine size of map to generate */
+    const int x = 16;
+    const int y = 9;
+
+    /* Generate random maze */
+    if (mazeInit(&maze, x, y) != EOK) {
+        printf("Failed to generate maze.\n");
+        return (-EIO);
+    }
+    else {
+        system("clear");
+    }
+
+    /* Solve the maze */
+    mazeSolve(&maze);
+
+    /* Print maze to screen */
+    mazeRender(&maze);
+
+    /* Clean up */
+    mazeDestroy(&maze);
+
+#ifdef RENDER_GIF
+    system("convert *.png -set delay 10 output.gif");
+#endif
+
+    return EOK;
 }
 
-void ResetGrid(){
-	
-	// Fills the grid with walls ('#' characters)
-	for (int i = 0; i < GRID_WIDTH * GRID_HEIGHT; ++i){
-		grid[i] = '#';
-	}
-}
-
-int XYToIndex(int x, int y){
-	
-	return y * GRID_WIDTH + x;
-}
-
-int IsInBounds(int x, int y){
-	
-	if (x < 0 || x >= GRID_WIDTH) return false;
-	if (y < 0 || y >= GRID_HEIGHT) return false;
-	return true;
-}
-
-void Visit(int x, int y){
-	
-	// Starting at the given index, recursively visits every direction in a
-	// randomized order.
-	// Set my current location to be an empty passage.
-	grid[XYToIndex(x, y)] = ' ';
-	// Create an local array containing the 4 directions and shuffle their order.
-	int dirs[4];
-	dirs[0] = NORTH;
-	dirs[1] = EAST;
-	dirs[2] = SOUTH;
-	dirs[3] = WEST;
-	for (int i = 0; i < 4; ++i){
-		
-		int r = rand() & 3;
-		int temp = dirs[r];
-		dirs[r] = dirs[i];
-		dirs[i] = temp;
-	}
-	
-	// Loop through every direction and attempt to Visit that direction.
-	for (int i = 0; i < 4; ++i){
-		
-		// dx,dy are offsets from current location. Set them based
-		// on the next direction I wish to try.
-		int dx = 0, dy = 0;
-		switch (dirs[i]){
-				
-		case NORTH: dy = -1; break;
-		case SOUTH: dy = 1; break;
-		case EAST: dx = 1; break;
-		case WEST: dx = -1; break;
-		}
-		
-		// Find the (x,y) coordinates of the grid cell 2 spots
-		// away in the given direction.
-		int x2 = x + (dx << 1);
-		int y2 = y + (dy << 1);
-		if (IsInBounds(x2, y2)){
-			
-			if (grid[XYToIndex(x2, y2)] == '#'){
-				
-				// (x2,y2) has not been visited yet... knock down the
-				// wall between my current position and that position
-				grid[XYToIndex(x2 - dx, y2 - dy)] = ' ';
-				// Recursively Visit (x2,y2)
-				Visit(x2, y2);
-			}
-		}
-	}
-}
-void PrintGrid(){
-	
-	// Displays the finished maze to the screen.
-	for (int y = 0; y < GRID_HEIGHT; ++y){
-		
-		for (int x = 0; x < GRID_WIDTH; ++x){
-			
-			cout << grid[XYToIndex(x, y)];
-		}
-		cout << endl;
-	}
-}
