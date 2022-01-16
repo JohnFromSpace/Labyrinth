@@ -10,14 +10,13 @@
 #include <string.h>
 #include <time.h>
 #include <stdbool.h>
-#include <io.h> // For VC with Windows
-//#include "unistd.h" //For linux
 #include "limits.h"//Linux
 
 /* Header Files */
 #include "linked_list.h"
 #include "maze.h"
 #include "stack.h"
+#include "w_unistd.h"//This header file is an implementation of 'unistd.h' for Windows //Replace the file with the library 'unistd.h' if you use Linux
 
 
 /*******************************************************************************
@@ -218,4 +217,40 @@ int mazeInit(maze_t* m, size_t width, size_t height) {
         mazeRender(m);
 #endif
 
+/* Found a valid unvisited 4-neighbour cell */
+        if (list.length > 0) {
+            /* Pick a random cell from the list of neighbouring cells with intact walls */
+            int offset = rand() % list.length;
+            lnode_t* tmp = list.head;
+            for (k = 0; k < offset; k++) {
+                tmp = tmp->next;
+            }
+            /* Knock down the wall between the current cell and the random neighbour */
+            coords_t* newCoords = (coords_t*)tmp->data;
+            cell_t* currentCell = &m->maze[cur.x][cur.y];
+            cell_t* neighbourCell = &m->maze[newCoords->x][newCoords->y];
+            direction_t dir = direction(cur.x, cur.y, newCoords->x, newCoords->y);
+            currentCell->status.wall &= ~dir;
+            neighbourCell->status.wall &= ~reverseDirection(dir);
+            /* Push current cell on to the stack now that walls are knocked down */
+            snode_t node = { 0 };
+            node.data = &cur;
+            node.width = sizeof(coords_t);
+            stackPush(&m->stack, &node);
+            cur.x = newCoords->x;
+            cur.y = newCoords->y;
+            iVisited++;
+        }
+        else {
+            /* Pop the top entry from the stack, set to current coordinates */
+            snode_t node = { 0 };
+            stackPop(&m->stack, &node);
+            coords_t* coords = node.data;
+            cur.x = coords->x;
+            cur.y = coords->y;
+            free(node.data);
+        }
 
+        /* Clean up temporary list */
+        (void)llistDestroy(&list);
+    }
