@@ -112,3 +112,110 @@ int main(void) {
     return EOK;
 }
 
+int mazeInit(maze_t* m, size_t width, size_t height) {
+    if (!m || width <= 0 || height <= 0) {
+        return (-EINVAL);
+    }
+    int i, j, k, a, b, ret = EOK;
+    llist_t list = { 0 };   /* For storing "neighbours" during generation */
+    bool bErr = false;
+    int iVisited = 0;
+    coords_t cur;
+
+    /* Initialize and dynamically allocate memory as needed */
+    if (stackInit(&m->stack) != EOK) {
+        bErr = true;
+    }
+    /* Store dimensions */
+    m->xMax = width;
+    m->yMax = height;
+    m->totalCells = m->xMax * m->yMax;
+    if (!bErr) {
+        if ((m->maze = (cell_t**)calloc(m->xMax, sizeof(cell_t*))) == NULL) {
+            bErr = true;
+        }
+        for (i = 0; i < m->xMax; i++) {
+            if ((m->maze[i] = (cell_t*)calloc(m->yMax, sizeof(cell_t))) == NULL) {
+                bErr = true;
+                break;
+            }
+        }
+    }
+
+    /* Populate cells with coordinates, walls */
+    for (i = 0; i < m->xMax; i++) {
+        for (j = 0; j < m->yMax; j++) {
+            m->maze[i][j].x = j;
+            m->maze[i][j].y = i;
+            m->maze[i][j].bVisited = false;
+            /* Build all walls */
+            m->maze[i][j].status.wall = NORTH | SOUTH | EAST | WEST;
+        }
+    }
+    /* Populate borders */
+    for (i = 0; i < m->xMax; i++) {
+        a = i;
+        b = 0;
+        m->maze[a][b].status.border |= NORTH;
+    }
+    for (i = 0; i < m->xMax; i++) {
+        a = i;
+        b = m->yMax - 1;
+        m->maze[a][b].status.border |= SOUTH;
+    }
+    for (i = 0; i < m->yMax; i++) {
+        a = 0;
+        b = i;
+        m->maze[a][b].status.border |= WEST;
+    }
+    for (i = 0; i < m->yMax; i++) {
+        a = m->xMax - 1;
+        b = i;
+        m->maze[a][b].status.border |= EAST;
+    }
+
+    /* Start depth-first-search generation of maze */
+    cur.x = 0;
+    cur.y = 0;
+    iVisited = 1;
+
+    /* Evaluate all cells in maze to make this a "perfect" maze with a unique
+     * path between any two arbitrary points in the maze.
+     */
+    while (iVisited < m->totalCells) {
+        (void)llistInit(&list);
+        for (i = -1; i <= 1; i++) {
+            for (j = -1; j <= 1; j++) {
+                /* Scan all valid neighboring cells */
+                if ((i == 0) && (j == 0)) {
+                    continue;
+                }
+                /* Make sure we don't try to address out-of-bounds memory via
+                 * sloppy indexing.
+                 */
+                if (inRange(cur.x + i, cur.y + j, m->xMax, m->yMax)) {
+                    /* Are the two cells 4-neighbours */
+                    if (isConnected4(cur.x, cur.y, cur.x + i, cur.y + j)) {
+                        /* Are all 4 walls for the cell intact */
+                        if (m->maze[cur.x + i][cur.y + j].status.wall == (NORTH | SOUTH | WEST | EAST)) {
+                            /* All walls are intact; Add cell coordinates to list */
+                            lnode_t tmp;
+                            coords_t coords;
+                            coords.x = cur.x + i;
+                            coords.y = cur.y + j;
+                            tmp.width = sizeof(coords_t);
+                            tmp.data = &coords;
+                            if (EOK != llistInsert(&list, &tmp)) {
+                                printf("INSERT ERROR\n");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /* Show maze being generated */
+#ifdef ANIMATED_ON_SCREEN
+        mazeRender(m);
+#endif
+
+
