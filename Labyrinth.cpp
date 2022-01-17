@@ -254,3 +254,115 @@ int mazeInit(maze_t* m, size_t width, size_t height) {
         /* Clean up temporary list */
         (void)llistDestroy(&list);
     }
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ /*----------------------------------------------------------------------------*/
+int mazeDestroy(maze_t* m) {
+    if (!m) {
+        return (-EINVAL);
+    }
+    int i;
+
+    stackDestroy(&m->stack);
+
+    for (i = 0; i < m->xMax; i++) {
+        free(m->maze[i]);
+        m->maze[i] = NULL;
+    }
+    free(m->maze);
+    m->maze = NULL;
+
+    return EOK;
+}
+
+
+/*----------------------------------------------------------------------------*/
+bool inRange(int x, int y, int xMax, int yMax) {
+    return ((x >= 0) && (y >= 0) && (x <= xMax - 1) && (y <= yMax - 1));
+}
+
+
+/*----------------------------------------------------------------------------*/
+bool isConnected4(int x1, int y1, int x2, int y2) {
+    return (
+        ((x1 == x2) && (y1 == y2 + 1)) ||
+        ((x1 == x2) && (y1 == y2 - 1)) ||
+        ((x1 == x2 + 1) && (y1 == y2)) ||
+        ((x1 == x2 - 1) && (y1 == y2))
+        );
+}
+
+
+/*----------------------------------------------------------------------------*/
+bool isAccessible(int x1, int y1, status_t status1, int x2, int y2, status_t status2) {
+    bool ret = false;
+    if ((x1 == x2) && (y1 == y2 - 1)) {
+        if (!(status1.wall & SOUTH) && !(status2.wall & NORTH)) {
+            ret = true;
+        }
+    }
+    if ((x1 == x2) && (y1 == y2 + 1)) {
+        if (!(status1.wall & NORTH) && !(status2.wall & SOUTH)) {
+            ret = true;
+        }
+    }
+    if ((x1 == x2 + 1) && (y1 == y2)) {
+        if (!(status1.wall & WEST) && !(status2.wall & EAST)) {
+            ret = true;
+        }
+    }
+    if ((x1 == x2 - 1) && (y1 == y2)) {
+        if (!(status1.wall & EAST) && !(status2.wall & WEST)) {
+            ret = true;
+        }
+    }
+    return ret;
+}
+
+
+/*----------------------------------------------------------------------------*/
+direction_t direction(int x1, int y1, int x2, int y2) {
+    direction_t ret = 0xff;
+    if (x1 == x2) {
+        if (y2 == y1 + 1) {
+            ret = SOUTH;
+        }
+        else if (y2 == y1 - 1) {
+            ret = NORTH;
+        }
+    }
+    if (y1 == y2) {
+        if (x2 == x1 - 1) {
+            ret = WEST;
+        }
+        else if (x2 == x1 + 1) {
+            ret = EAST;
+        }
+    }
+    return ret;
+}
+
+
+/*----------------------------------------------------------------------------*/
+direction_t reverseDirection(int dir) {
+    direction_t ret = 0xFF;
+    switch (dir) {
+    case NORTH:
+        ret = SOUTH;
+        break;
+    case SOUTH:
+        ret = NORTH;
+        break;
+    case EAST:
+        ret = WEST;
+        break;
+    case WEST:
+        ret = EAST;
+        break;
+    default:
+        break;
+    }
+    return ret;
+}
+ 
