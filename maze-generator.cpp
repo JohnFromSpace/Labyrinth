@@ -17,7 +17,7 @@ int main() {
 	cout << "Dimensions of the maze (width x height): \n" 
 		<< "Quick note: For higher values for 'width' the maze will not appear as it should on the cmd" 
 		<< "(ex.: 80 x 20).\n";
-	
+	cout << "THE PRODUCT OF THE WIDTH AND HEIGHT OF THE MAZE SHOULD NOT BE 1600 OR MORE!!!!\n";
 	cout << "Enter the dimensions of the maze (width & height):\t";
 
 	cin >> sizeX >> sizeY;
