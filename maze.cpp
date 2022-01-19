@@ -1,10 +1,14 @@
-#include "maze.h"
+##include "maze.h"
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <random>
+#include <vector>
+#include "rlutil.h"
 
 const char WALL = '#';
 const char SPACE = ' ';
-const char SOLUTION = '*';
-const char START = 'S';
-const char EXIT = 'E';
+const char SOLUTION = '.';
 
 
 Stack::Stack()
@@ -19,6 +23,7 @@ Stack::~Stack()
 		pop();
 	}
 }
+
 
 void Stack::push(Cell* cell)
 {
@@ -232,10 +237,10 @@ bool Maze::generateMaze()
 
 	return generateMaze();
 }
-
+   
 
 bool Maze::solveMaze()
-{
+{	
 	// Initialization
 	if (path->getTop() == nullptr) {
 		int index = entranceY * mazeWidth + entranceX;
@@ -292,7 +297,7 @@ bool Maze::solveMaze()
 
 	return solveMaze();
 }
-
+ 
 
 void printRow(int nb)
 {
@@ -315,7 +320,7 @@ void printNumbers(int max) {
 
 
 void Maze::printMaze(bool displayPath) const
-{
+{	
 	printNumbers(mazeWidth);
 	printRow(4 * mazeWidth);
 	for (int i = 0; i < mazeHeight; i++) {
@@ -386,3 +391,7 @@ void Maze::printMaze(bool displayPath) const
 
 	}
 }
+
+
+
+
