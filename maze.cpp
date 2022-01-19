@@ -131,7 +131,7 @@ Maze::~Maze()
 	path = nullptr;
 
 	delete[] maze;
-	delete maze;
+	
 	maze = nullptr;
 }
 
