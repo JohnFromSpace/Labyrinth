@@ -1,7 +1,8 @@
-#include "maze.cpp"
 #include <time.h>
 #include <fstream>
+
 #include "stdafx.h"
+#include "maze.h"
 
 const int PRODUCT_LIMIT = 1600;
 
