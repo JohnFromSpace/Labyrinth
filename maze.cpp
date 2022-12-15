@@ -1,10 +1,11 @@
-##include "maze.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <vector>
+
 #include "rlutil.h"
+#include "maze.h"
 
 const char WALL = '#';
 const char SPACE = ' ';
