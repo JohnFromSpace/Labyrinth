@@ -1,6 +1,5 @@
 #include <time.h>
 #include <fstream>
-
 #include "stdafx.h"
 #include "maze.h"
 
